@@ -1,70 +1,58 @@
 package il.eyalgo.goeuro;
 
 import il.eyalgo.goeuro.model.Endpoint;
+import il.eyalgo.goeuro.request.GoEuroRequest;
+import il.eyalgo.goeuro.response.JsonResponseConverter;
+import il.eyalgo.goeuro.writer.CsvWriter;
 
-import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.List;
 
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.client.utils.URIUtils;
-
-import com.google.gson.Gson;
-
-import us.monoid.json.JSONArray;
-import us.monoid.json.JSONException;
-import us.monoid.json.JSONObject;
-import us.monoid.web.JSONResource;
-import us.monoid.web.Resty;
-import us.monoid.web.XMLResource;
-
-
 public class GoEuroMain {
-    private final static String DEFAULT_CSV_FILE = "goeuro.csv";
+    private final static String CSV_SUFFIX = ".csv";
 
     public GoEuroMain() {
     }
 
     public static void main(String[] args) throws URISyntaxException {
-        try {
-            String location = "potsdam";
-            
-            
-            URI uri = new URIBuilder()
-            .setScheme("http")
-            .setHost("www.goeuro.com")
-            .setPath("/GoEuroAPI/rest/api/v2/position/suggest/en/" + location).build();
-            
-//            String query = "http://www.goeuro.com/GoEuroAPI/rest/api/v2/position/suggest/en/"+URI.create(location).toString();
-            Gson gson = new Gson();
-            Resty resty = new Resty();
-            JSONResource json = resty.json(uri);
-            JSONArray jsonArray = json.array();
-            System.out.println(jsonArray.toString());
-            
-            Endpoint[] fromJson = gson.fromJson(jsonArray.toString(), Endpoint[].class);
-            for (Endpoint endpoint : fromJson) {
-                System.out.println(endpoint);
-            }
-        } catch (IOException | JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-//        new Resty().json(anUri);
         if (args.length < 1) {
             help();
             System.exit(1);
         }
+        String querySuffix = args[0];
+        String filePath = querySuffix + CSV_SUFFIX;
+        if (args.length > 1) {
+            filePath = args[1];
+        }
+        executeQuery(querySuffix, filePath);
+    }
+
+    private static void executeQuery(String querySuffix, String filePath) {
+        GoEuroRequest request = new GoEuroRequest();
+        JsonResponseConverter converter = new JsonResponseConverter();
+        CsvWriter writer = new CsvWriter();
+
+        try {
+            String jsonArray = request.callApi(querySuffix);
+            List<Endpoint> endpoints = converter.jsonArrayToEndpoints(jsonArray);
+            writer.createCsv(filePath, endpoints);
+        } catch (FileAlreadyExistsException e) {
+            System.err.println(String.format("File: '%s' already exists. exiting...", filePath));
+            System.exit(2);
+        } catch (Exception e) {
+            System.err.println("Unknown error. See stack trace");
+            e.printStackTrace();
+        }
     }
 
     private static void help() {
-        System.out.println("Please provide correct input");
-        System.out.println();
-        System.out.println("Example: java ­jar GoEuroTest.jar \"STRING\"");
-        System.out.println("You can set the ouput file as well.");
-        System.out.println("Example: java ­jar GoEuroTest.jar \"STRING\" \"File_name\"");
-        System.out.println(String.format("If output file not provided, then %s will be created", DEFAULT_CSV_FILE));
+        System.err.println("Please provide correct input");
+        System.err.println();
+        System.err.println("Example: java ­jar GoEuroTest.jar \"STRING\"");
+        System.err.println("You can set the ouput file as well.");
+        System.err.println("Example: java ­jar GoEuroTest.jar \"STRING\" \"File_name\"");
+        System.err.println(String.format("If output file not provided, then input string + %s will be created",
+                CSV_SUFFIX));
     }
 }
