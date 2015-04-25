@@ -1,5 +1,6 @@
 package il.eyalgo.goeuro;
 
+
 public class GoEuroMain {
     private final static String DEFAULT_CSV_FILE = "goeuro.csv";
 
@@ -7,6 +8,7 @@ public class GoEuroMain {
     }
 
     public static void main(String[] args) {
+//        new Resty().json(anUri);
         if (args.length < 1) {
             help();
             System.exit(1);
