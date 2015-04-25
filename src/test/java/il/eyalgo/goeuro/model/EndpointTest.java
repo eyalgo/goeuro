@@ -14,4 +14,13 @@ public class EndpointTest {
         String ezpectedCsvFormat = "the_type,the_id,a---name,a---type,52.39886,13.06566";
         assertThat("CSV format is wrong", csvFormat, equalTo(ezpectedCsvFormat));
     }
+    
+    @Test
+    public void endpoint_with_type_null_should_correctly_set_csv() {
+        Endpoint endpoint = new Endpoint(null, "the_id", "a---name", "a---type", new GeoPosition(52.39886, 13.06566));
+        String csvFormat = endpoint.asCsv();
+
+        String ezpectedCsvFormat = "null,the_id,a---name,a---type,52.39886,13.06566";
+        assertThat("CSV format is wrong", csvFormat, equalTo(ezpectedCsvFormat));
+    }
 }

@@ -22,7 +22,8 @@ public class Endpoint {
     }
 
     public String asCsv() {
-        return new StringBuilder(_type).append(COMMA)
+        return new StringBuilder()
+                .append(_type).append(COMMA)
                 .append(_id).append(COMMA)
                 .append(name).append(COMMA)
                 .append(type).append(COMMA)
